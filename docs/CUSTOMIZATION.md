@@ -40,6 +40,15 @@ Don't trust auto-send yet? Two edits make the agent a pure drafter:
 
 You then review Drafts and press Send yourself. Great as a first-week trust-building mode; switch back by restoring the original Step 6.
 
+## Skip specific companies
+
+Step 2 has check 10, `EXCLUDED COMPANIES`, driven by the `{{EXCLUDED_COMPANIES}}` placeholder — a comma-separated list of company names and/or domains (e.g. `Acme Corp, evilcorp.com`) that should never get a feedback reply or draft, no matter what else matches.
+
+- **Add/remove a company:** open the routine ([claude.ai/code/routines](https://claude.ai/code/routines)) → edit → find the `EXCLUDED COMPANIES` line in check 10 → update the list → Save. No other edits needed.
+- Matching is by company name or domain, case-insensitive, ignoring legal suffixes (Inc/GmbH/Ltd) and ATS relay subdomains — you don't need the exact sender address, just the company name as it appears in the mail.
+- Excluded rejections still get the `RejectionAgent/Processed` label so they don't clutter every summary — they'll show up once as "skipped: excluded company by user preference" and then go quiet.
+- If you never need this, leave the placeholder as `none` — check 10 then never matches anything.
+
 ## Add ATS / employer domains to the discovery net
 
 Step 1(b) lists sender domains of common recruiting systems. Add any ATS or employer mail domain you encounter (look at the From/Reply-To of confirmations you receive, e.g. `jobs@yourdreamcompany.com` → add `yourdreamcompany.com`). This only improves *recall* — classification still decides what's really a rejection.

@@ -4,7 +4,7 @@ This file contains the complete instructions ("prompt") that make the agent work
 
 ## How to use it
 
-1. Replace the three placeholders below (`{{YOUR_NAME}}`, `{{YOUR_EMAIL}}`, `{{YOUR_PROFILE}}`) throughout the prompt.
+1. Replace the four placeholders below (`{{YOUR_NAME}}`, `{{YOUR_EMAIL}}`, `{{YOUR_PROFILE}}`, `{{EXCLUDED_COMPANIES}}`) throughout the prompt.
 2. Paste the whole thing into a new routine's **Instructions** field ([setup guide](../docs/SETUP-GUIDE.md), Step 3).
 3. Read the reply-wording section (Step 6 inside the prompt) and make it sound like *you* — this text goes to real recruiters in your name. **Never deploy a reply template you haven't read.**
 
@@ -13,6 +13,7 @@ This file contains the complete instructions ("prompt") that make the agent work
 | `{{YOUR_NAME}}` | `Alex Meyer` |
 | `{{YOUR_EMAIL}}` | `alex.meyer@gmail.com` |
 | `{{YOUR_PROFILE}}` | `a frontend developer applying for software jobs (mostly in Germany)` |
+| `{{EXCLUDED_COMPANIES}}` | `Skalar` (comma-separate more, e.g. `Skalar, Acme Corp`; use `none` if there's nothing to exclude) |
 
 The prompt assumes replies are written **in English** and that rejections arrive in **English or German**. Both are one-line changes — see [CUSTOMIZATION.md](../docs/CUSTOMIZATION.md).
 
@@ -56,6 +57,7 @@ STEP 2 — CLASSIFY: ALL of the following must be true, otherwise skip
  7. The rejection message itself arrived within the last 7 days — check its own Date header; never reply to an older message even if its thread resurfaced.
  8. From: is not {{YOUR_EMAIL}} — the user's own mail is never a candidate.
  9. VERIFY THE APPLICATION IS REAL: search the WHOLE mailbox including archive, spam and trash (in:anywhere / include_spam_trash) for prior correspondence with this company — an application confirmation, the sent application, or an interview thread. The rejection email itself does NOT count as a trace, and confirmations are often in trash — a deleted confirmation still proves the application was real. If there is no trace besides the rejection itself, do not reply: "skipped: no record of application (possible spam/phishing)".
+ 10. EXCLUDED COMPANIES (the user's explicit instruction, override everything else): {{EXCLUDED_COMPANIES}}. If the sender's company name, or its email domain, matches any entry in this list (case-insensitive; match on the core company name, ignoring suffixes like "Inc"/"GmbH" and common ATS relay subdomains), do NOT reply and do NOT create a draft — skip with "skipped: excluded company by user preference", even if every other check above passed. Still apply the RejectionAgent/Processed label so it isn't re-surfaced next run.
 
 STEP 3 — DEDUPE via GMAIL_FETCH_EMAILS: ALL of these must come back empty, otherwise skip as "already handled"
  1. Fetch the COMPLETE thread. It must contain NO message from {{YOUR_EMAIL}} — one message from the user anywhere in the thread permanently disqualifies the whole thread, regardless of message order. If a company replied after an earlier feedback request, that is "company responded — review manually", never a new rejection.
