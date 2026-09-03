@@ -49,6 +49,8 @@ Step 2 has check 10, `EXCLUDED COMPANIES`, driven by the `{{EXCLUDED_COMPANIES}}
 - Excluded rejections still get the `RejectionAgent/Processed` label so they don't clutter every summary — they'll show up once as "skipped: excluded company by user preference" and then go quiet.
 - If you never need this, leave the placeholder as `none` — check 10 then never matches anything.
 
+**This is for a standing rule ("never email this company").** For a one-off — "don't send to the Skalar rejection that's sitting in my inbox right now, but a future rejection from some other company called Skalar should be handled normally" — don't touch the prompt at all. Just apply the `RejectionAgent/Processed` label to that specific message/thread yourself (Gmail app, or ask Claude to do it via the Gmail connector). The routine treats anything already labeled Processed as handled and will never reply to it, without changing behavior for anyone else.
+
 ## Add ATS / employer domains to the discovery net
 
 Step 1(b) lists sender domains of common recruiting systems. Add any ATS or employer mail domain you encounter (look at the From/Reply-To of confirmations you receive, e.g. `jobs@yourdreamcompany.com` → add `yourdreamcompany.com`). This only improves *recall* — classification still decides what's really a rejection.

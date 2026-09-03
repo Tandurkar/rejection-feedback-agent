@@ -13,7 +13,7 @@ This file contains the complete instructions ("prompt") that make the agent work
 | `{{YOUR_NAME}}` | `Alex Meyer` |
 | `{{YOUR_EMAIL}}` | `alex.meyer@gmail.com` |
 | `{{YOUR_PROFILE}}` | `a frontend developer applying for software jobs (mostly in Germany)` |
-| `{{EXCLUDED_COMPANIES}}` | `Skalar` (comma-separate more, e.g. `Skalar, Acme Corp`; use `none` if there's nothing to exclude) |
+| `{{EXCLUDED_COMPANIES}}` | `Acme Corp, evilcorp.com` (leave as `none` if there's nothing to permanently exclude) |
 
 The prompt assumes replies are written **in English** and that rejections arrive in **English or German**. Both are one-line changes — see [CUSTOMIZATION.md](../docs/CUSTOMIZATION.md).
 
