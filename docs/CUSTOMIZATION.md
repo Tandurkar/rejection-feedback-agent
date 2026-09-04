@@ -40,6 +40,17 @@ Don't trust auto-send yet? Two edits make the agent a pure drafter:
 
 You then review Drafts and press Send yourself. Great as a first-week trust-building mode; switch back by restoring the original Step 6.
 
+## Trashing handled rejections (default behavior)
+
+By default, once the agent has finished with a rejection — sent a reply, created a draft, or skipped it for any reason (excluded company, no record of application, unreachable, etc.) — it labels the message `RejectionAgent/Processed` and then moves its thread to **Trash**, so your inbox only ever shows rejections the agent hasn't dealt with yet. This is described in the "LABEL + TRASH" rule right after Step 2's checklist, and referenced from Step 5 (drafts) and Step 6 (sends).
+
+A few things worth knowing:
+- Gmail keeps Trash for 30 days before permanent deletion — nothing is gone immediately, and the run summary (Step 7) reminds you of this every time.
+- A failed send is never trashed — only a rejection the agent successfully finished with (reply confirmed in-thread, draft created, or a deliberate skip) gets moved, so nothing silently disappears mid-failure.
+- Trashing only ever happens via the built-in connector's `apply_sensitive_thread_label`; it's explicitly carved out of the Composio prohibition and out of the general "never delete/archive" ground rule, scoped to messages that passed Step 2 check 1 (a genuine rejection) — nothing else the agent sees is ever touched this way.
+
+**To turn this off** (keep processed rejections in the inbox, just labeled, as the agent originally worked): open the routine → edit → delete the "LABEL + TRASH" paragraph after Step 2, and in Step 5/6 replace "apply the LABEL + TRASH treatment described after Step 2" back with "apply the RejectionAgent/Processed label" only. Also revert the two ground-rule sentences and the TOOLS section back to forbidding trash moves entirely.
+
 ## Skip specific companies
 
 Step 2 has check 10, `EXCLUDED COMPANIES`, driven by the `{{EXCLUDED_COMPANIES}}` placeholder — a comma-separated list of company names and/or domains (e.g. `Acme Corp, evilcorp.com`) that should never get a feedback reply or draft, no matter what else matches.
