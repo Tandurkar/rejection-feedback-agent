@@ -11,7 +11,7 @@ The agent is a prompt — customizing it means editing text, not code. Open your
 Default: replies always in **English**; rejections understood in **English and German**; other languages are skipped and surfaced.
 
 - *Reply in the rejection's language instead:* in Step 6, replace "Write in English even when the rejection is in German" with "Write in the same language as the rejection. For German, mirror the sender's register (du if they wrote du, otherwise Sie) and never guess Herr/Frau — use 'Guten Tag <full name>' when unsure."
-- *Add a language:* extend Step 2.6 (e.g. "English, German or French") and add that language's rejection phrases to the Step 1(a) keyword list (e.g. `"malheureusement"`, `"candidature n'a pas été retenue"`).
+- *Add a language:* extend Step 2 Phase B, check B2 (e.g. "English, German or French") and add that language's rejection phrases to the Step 1(a) keyword list (e.g. `"malheureusement"`, `"candidature n'a pas été retenue"`). Note this only affects whether a *reply* is sent — Phase A (and so the immediate move to Trash) never depends on language; a rejection in any language at all gets trashed on sight.
 
 ## Change the tone or template
 
@@ -40,25 +40,27 @@ Don't trust auto-send yet? Two edits make the agent a pure drafter:
 
 You then review Drafts and press Send yourself. Great as a first-week trust-building mode; switch back by restoring the original Step 6.
 
-## Trashing handled rejections (default behavior)
+## Trashing rejections immediately on arrival (default behavior)
 
-By default, once the agent has finished with a rejection — sent a reply, created a draft, or skipped it for any reason (excluded company, no record of application, unreachable, etc.) — it labels the message `RejectionAgent/Processed` and then moves its thread to **Trash**, so your inbox only ever shows rejections the agent hasn't dealt with yet. This is described in the "LABEL + TRASH" rule right after Step 2's checklist, and referenced from Step 5 (drafts) and Step 6 (sends).
+By default, the moment the agent confirms a message is genuinely a rejection (Step 2 Phase A — checks A1–A6: explicit final rejection, no next steps, addressed to you, position/company identifiable, within the time window, not your own mail) it moves that thread straight to **Trash**, before deciding anything about replying. Only afterward, in Phase B, does it work out whether to send a feedback reply, create a draft, or skip — all performed on the item while it's already sitting in Trash. This keeps the inbox clear of rejections as fast as the agent's schedule allows, regardless of whether the rejection is in English, German, or any other language (language only affects the *reply* decision in Phase B, never the trash decision in Phase A).
 
-A few things worth knowing:
+**The one thing this can't do: make it invisible to Gmail's push notification.** Gmail notifies your phone/desktop the instant a message is delivered — before any scheduled agent, this one included, gets to run. So there will always be a gap between "notification fires" and "next scheduled run trashes it." The only lever you have is running the agent more often (see "Change the schedule" above; the routine platform's minimum spacing is 1 hour). There is no way, with a scheduled/polling agent like this one, to trash something before its own notification has already appeared — that would require a real-time push integration (Gmail API watch + a webhook listener) outside what a Claude Code routine can do.
+
+A few other things worth knowing:
+- The `RejectionAgent/Processed` label is applied separately, only once the item is *fully* handled (reply confirmed sent, draft created, or a deliberate skip decision) — never at the moment of trashing. This is deliberate: if a send fails, the item stays trashed-but-unlabeled, so the next run still finds and retries it, rather than the label wrongly marking a never-sent reply as done.
 - Gmail keeps Trash for 30 days before permanent deletion — nothing is gone immediately, and the run summary (Step 7) reminds you of this every time.
-- A failed send is never trashed — only a rejection the agent successfully finished with (reply confirmed in-thread, draft created, or a deliberate skip) gets moved, so nothing silently disappears mid-failure.
-- Trashing only ever happens via the built-in connector's `apply_sensitive_thread_label`; it's explicitly carved out of the Composio prohibition and out of the general "never delete/archive" ground rule, scoped to messages that passed Step 2 check 1 (a genuine rejection) — nothing else the agent sees is ever touched this way.
+- Trashing only ever happens via the built-in connector's `apply_sensitive_thread_label`; it's explicitly carved out of the Composio prohibition and out of the general "never delete/archive" ground rule, scoped to messages that pass Step 2 Phase A — nothing else the agent sees is ever touched this way.
 
-**To turn this off** (keep processed rejections in the inbox, just labeled, as the agent originally worked): open the routine → edit → delete the "LABEL + TRASH" paragraph after Step 2, and in Step 5/6 replace "apply the LABEL + TRASH treatment described after Step 2" back with "apply the RejectionAgent/Processed label" only. Also revert the two ground-rule sentences and the TOOLS section back to forbidding trash moves entirely.
+**To turn this off** (keep rejections in the inbox until fully handled, as the agent originally worked): open the routine → edit → delete the "IMMEDIATE TRASH" paragraph in Step 2, and move a trash step back to the end of Step 5/Step 6 instead (right where the RejectionAgent/Processed label is currently applied). Also revert the two ground-rule sentences and the TOOLS section back to forbidding trash moves entirely.
 
 ## Skip specific companies
 
-Step 2 has check 10, `EXCLUDED COMPANIES`, driven by the `{{EXCLUDED_COMPANIES}}` placeholder — a comma-separated list of company names and/or domains (e.g. `Acme Corp, evilcorp.com`) that should never get a feedback reply or draft, no matter what else matches.
+Step 2 Phase B has check B4, `EXCLUDED COMPANIES`, driven by the `{{EXCLUDED_COMPANIES}}` placeholder — a comma-separated list of company names and/or domains (e.g. `Acme Corp, evilcorp.com`) that should never get a feedback reply or draft, no matter what else matches. Note it's a Phase B check, so it only blocks the *reply* — an excluded company's rejection is still trashed immediately in Phase A like any other.
 
-- **Add/remove a company:** open the routine ([claude.ai/code/routines](https://claude.ai/code/routines)) → edit → find the `EXCLUDED COMPANIES` line in check 10 → update the list → Save. No other edits needed.
+- **Add/remove a company:** open the routine ([claude.ai/code/routines](https://claude.ai/code/routines)) → edit → find the `EXCLUDED COMPANIES` line in check B4 → update the list → Save. No other edits needed.
 - Matching is by company name or domain, case-insensitive, ignoring legal suffixes (Inc/GmbH/Ltd) and ATS relay subdomains — you don't need the exact sender address, just the company name as it appears in the mail.
 - Excluded rejections still get the `RejectionAgent/Processed` label so they don't clutter every summary — they'll show up once as "skipped: excluded company by user preference" and then go quiet.
-- If you never need this, leave the placeholder as `none` — check 10 then never matches anything.
+- If you never need this, leave the placeholder as `none` — check B4 then never matches anything.
 
 **This is for a standing rule ("never email this company").** For a one-off — "don't send to the Skalar rejection that's sitting in my inbox right now, but a future rejection from some other company called Skalar should be handled normally" — don't touch the prompt at all. Just apply the `RejectionAgent/Processed` label to that specific message/thread yourself (Gmail app, or ask Claude to do it via the Gmail connector). The routine treats anything already labeled Processed as handled and will never reply to it, without changing behavior for anyone else.
 
@@ -68,7 +70,7 @@ Step 1(b) lists sender domains of common recruiting systems. Add any ATS or empl
 
 ## Widen or narrow the time window
 
-`newer_than:7d` appears throughout Step 1; change all occurrences consistently (e.g. `14d`). Keep Step 2.7 (per-message age check) aligned. Remember: replying weeks late reads worse than not replying.
+`newer_than:7d` appears throughout Step 1; change all occurrences consistently (e.g. `14d`). Keep Step 2 Phase A, check A5 (per-message age check) aligned. Remember: replying weeks late reads worse than not replying.
 
 ## Change caps
 

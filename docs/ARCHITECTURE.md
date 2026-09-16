@@ -73,22 +73,26 @@ Four query families: keyword net (English + German rejection phrases), ATS-sende
 
 That last one exists because of the strangest real-world finding of this project: a company's rejection emails contained **invisible zero-width Unicode characters woven between words**, which silently defeats keyword search. The only robust answer is to let the model *read* every recent subject/snippet rather than trust string matching. Search is treated as a recall filter; the model is the classifier.
 
-### Step 2 — Classify (optimize for precision)
-A ten-point conjunctive checklist. Highlights:
+### Step 2 — Classify (optimize for precision), in two phases
+**Phase A (six checks)** answers one question — *is this genuinely a rejection at all* — and nothing more. The instant it says yes, the thread moves to Trash. Nothing about replying has been decided yet; the inbox is just cleared as fast as possible, in any language, because that decision doesn't need to be fast.
 
-- **Final rejection only** — "unfortunately we must reschedule" contains "unfortunately" and is absolutely not a rejection. Interview invites, alternative-role offers and questions all disqualify.
-- **The anti-phishing rule** — the agent searches the whole mailbox (including trash, where deleted confirmations live) for independent proof the application existed. Fake-rejection phishing is real, and auto-replying to it confirms a live address.
-- **Vague ≠ reason** — "candidates who more closely align with our needs" never counts as a company having "given a reason"; those rejections are precisely the ones worth interrogating (Step 6). A *concrete* stated reason (e.g. a named missing requirement) means there's nothing to ask — skip and surface it.
+**Phase B (four checks)**, evaluated afterward on the now-trashed item, answers *should I also reply*:
+
+- **Final rejection only** (Phase A) — "unfortunately we must reschedule" contains "unfortunately" and is absolutely not a rejection. Interview invites, alternative-role offers and questions all disqualify.
+- **The anti-phishing rule** (Phase B) — the agent searches the whole mailbox (including trash, where deleted confirmations live) for independent proof the application existed. Fake-rejection phishing is real, and auto-replying to it confirms a live address. Note this runs *after* the phishing-suspect rejection is already trashed — the check governs the reply only, not the trash move.
+- **Vague ≠ reason** (Phase B) — "candidates who more closely align with our needs" never counts as a company having "given a reason"; those rejections are precisely the ones worth interrogating (Step 6). A *concrete* stated reason (e.g. a named missing requirement) means there's nothing to ask — skip and surface it.
 - **When unsure → skip and report.** Precision failures send embarrassing emails in your name; recall failures just wait for the next run.
+
+The split matters for one reason: **the label that means "fully handled" is applied only at the very end** (a confirmed send, a created draft, or a completed Phase B/Step 3/Step 4 skip) — never at the moment of trashing. A message can therefore sit in Trash *without* the label, meaning "identified, trashed, reply still pending" — that's exactly what a failed send from a prior run looks like, and it's what tells the next run to retry it rather than treat it as done.
 
 ### Step 3 — Dedupe (three independent layers)
 1. **Thread poison-pill:** any message from you anywhere in the thread disqualifies it forever — including replies the agent itself sent, and *regardless of message order*, so a recruiter's answer to a feedback request can never be re-read as a "new rejection" (a loop that a naive "did I reply after this?" check falls straight into).
 2. **Sent-folder queries** by recipient, company and position — catching the cross-thread case where one application produces two rejection emails (ATS + personal).
-3. **The `RejectionAgent/Processed` label** as a fast-path marker, applied — and the thread then moved to Trash — after every action, sent, drafted, or skipped.
+3. **The `RejectionAgent/Processed` label** as a fast-path marker, applied once an item is fully handled — sent, drafted, or a completed skip decision.
 
 Layered because each has a hole: labels can fail to apply, threads can fork, sent-search needs the right key. All three failing together is what it would take to double-email someone.
 
-Trashing only ever follows labeling, never precedes or replaces the dedupe checks above — a message already in Trash from a prior run is recognized by its label, not its location, so Step 1's own trash sweep (for rejections *you* deleted before the agent ever saw them) keeps working unchanged.
+Trashing happens earlier now — in Step 2 Phase A, well before dedupe runs — and labeling happens later, only on full completion. The two are deliberately decoupled: a message already in Trash from a prior run is recognized as "fully handled" (or not) purely by its label, never by its location. That's what lets Step 1's trash sweep tell apart a rejection *you* deleted (unlabeled, still a fresh candidate), a rejection the agent trashed but hasn't finished replying to yet (unlabeled, a retry candidate), and one it's fully done with (labeled, skip silently).
 
 ### Step 4 — Find a real reply target
 Priority order: `Reply-To` header → sender address → a contact the company **itself designated** in its confirmation email ("for questions, contact recruiting@…"). ATS per-conversation relay addresses (`reply-<id>@ats-domain`) look robotic but are valid, monitored routes — a plain Gmail "Reply" would use them too.
@@ -99,7 +103,7 @@ Hard boundary: **never email an address merely scraped from an email body.** Foo
 A rejection referencing your interviews, offering a feedback call, or written personally by someone you met gets a **draft, not an auto-send**. Auto-templating the one recruiter who offered you a call would burn the most valuable contact in your pipeline. Human warmth gets a human in the loop.
 
 ### Step 6 — Write and send
-In-thread reply (correct threading via thread ID; never a custom subject, which forks the conversation), addressed by the sender's signed name — never guessing gendered titles (Herr/Frau/Mr/Ms), which misgenders real people. One pointed ask; when the rejection used vague alignment language, the reply quotes it back and asks *which* requirements were decisive. No hedging filler that invites a non-answer. Re-check dedupe immediately before the send; verify the reply landed in the thread immediately after; then label and move it to Trash.
+In-thread reply (correct threading via thread ID; never a custom subject, which forks the conversation), addressed by the sender's signed name — never guessing gendered titles (Herr/Frau/Mr/Ms), which misgenders real people. One pointed ask; when the rejection used vague alignment language, the reply quotes it back and asks *which* requirements were decisive. No hedging filler that invites a non-answer. Re-check dedupe immediately before the send (the message is already in Trash from Phase A — replying to a trashed thread works the same as any other); verify the reply landed in the thread immediately after; then apply the completion label.
 
 ### Step 7 — Report (without spamming yourself)
 One summary per active run, with the decisive rejection sentence quoted for every item — that quote is your audit trail for the classifier's judgment. A **watermark against past summaries** prevents the classic failure of re-reporting the same skipped item three times a day for a week. No news → no email.
